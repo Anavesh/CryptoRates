@@ -11,12 +11,20 @@ class CryptoViewModel {
         self.coin = coin
     }
     
-    var rankLabel: String {
+    var rank: String {
         return "Rank: \(coin.cmcRank)"
     }
     
-    var maxSupplyLabel: String {
+    var maxSupply: String {
         guard let maxSupply = coin.maxSupply else {return "There is no value"}
         return "Max supply: \(maxSupply)"
+    }
+    
+    var price: String {
+        return "Price: \(coin.pricingData.price)"
+    }
+    
+    var marketCap: String {
+        return "Market supply: \(coin.pricingData.marketCap)"
     }
 }

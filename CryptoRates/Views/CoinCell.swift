@@ -15,6 +15,8 @@ class CoinCell: UITableViewCell {
         label.textColor = .black
         label.textAlignment = .left
         label.adjustsFontSizeToFitWidth = true
+        label.font = UIFont(name: "Bangla MN Bold", size: 28)
+        label.adjustsFontSizeToFitWidth = true
         return label
     }()
     
