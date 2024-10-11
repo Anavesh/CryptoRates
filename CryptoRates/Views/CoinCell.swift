@@ -1,4 +1,5 @@
 import UIKit
+import Kingfisher
 
 class CoinCell: UITableViewCell {
     
@@ -15,8 +16,8 @@ class CoinCell: UITableViewCell {
         label.textColor = .black
         label.textAlignment = .left
         label.adjustsFontSizeToFitWidth = true
-        label.font = UIFont(name: "Bangla MN Bold", size: 28)
-        label.adjustsFontSizeToFitWidth = true
+        label.font = UIFont.preferredFont(forTextStyle: .headline)
+        label.adjustsFontForContentSizeCategory = true
         return label
     }()
     
@@ -40,11 +41,14 @@ class CoinCell: UITableViewCell {
     
     // MARK: Function to setup the cell content with coin data
     
-    public func configureCell(with coin: Coin) {
+    public func configure(with coin: Coin) {
         self.coin = coin
         self.coinName.text = coin.name
     }
-    
+   
+    public func updateImage() {
+        coinLogo.kf.setImage(with:coin?.logoURL)
+    }
     
     // MARK: Setup UI
     private func setView() {

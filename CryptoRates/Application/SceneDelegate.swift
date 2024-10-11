@@ -1,11 +1,5 @@
-//
-//  SceneDelegate.swift
-//  CryptoRates
-//
-//  Created by Naira on 26.09.2024.
-//
-
 import UIKit
+import Kingfisher
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
@@ -15,8 +9,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: windowScene)
-        window?.rootViewController = UINavigationController(rootViewController: MainViewController()) // UINavigationController является контейнером для стека контроллеров. У данного контейнера должен быть корневой ViewController (rootViewController), который будет отображаться самым первым. В данном случае им является MainViewController, который является объектом типа MainViewController.
+        let mainViewController = MainViewController()
+        window?.rootViewController = UINavigationController(rootViewController: mainViewController) // UINavigationController является контейнером для стека контроллеров. У данного контейнера должен быть корневой ViewController (rootViewController), который будет отображаться самым первым. В данном случае им является MainViewController, который является объектом типа MainViewController.
         window?.makeKeyAndVisible()
+        ImageCache.default.diskStorage.config.sizeLimit = 500*1024*1024
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {

@@ -1,31 +1,14 @@
 import UIKit
 
-class MainViewController: UIViewController {
+class MainViewController: UIViewController, UISearchControllerDelegate {
     
     // MARK: Variables
     
-    let coins: [Coin] = [
-        Coin(name: "BitCoin", id: 1, cmcRank: 1, maxSupply: 1000, pricingData: PricingData(price: 10000, marketCap: 2000)),
-        Coin(name: "Ethereum", id: 2, cmcRank: 2, maxSupply: 5000, pricingData: PricingData(price: 5000, marketCap: 1000)),
-        Coin(name: "Flycoin", id: 3, cmcRank: 3, maxSupply: nil, pricingData: PricingData(price: 1000, marketCap: 500)),
-        Coin(name: "LiteCoin", id: 4, cmcRank: 4, maxSupply: 8400, pricingData: PricingData(price: 2000, marketCap: 800)),
-        Coin(name: "Ripple", id: 5, cmcRank: 5, maxSupply: 100000, pricingData: PricingData(price: 0.6, marketCap: 600)),
-        Coin(name: "Dogecoin", id: 6, cmcRank: 6, maxSupply: nil, pricingData: PricingData(price: 0.2, marketCap: 50)),
-        Coin(name: "Cardano", id: 7, cmcRank: 7, maxSupply: 45000, pricingData: PricingData(price: 2.0, marketCap: 900)),
-        Coin(name: "Polkadot", id: 8, cmcRank: 8, maxSupply: 10000, pricingData: PricingData(price: 25.0, marketCap: 1000)),
-        Coin(name: "Binance Coin", id: 9, cmcRank: 9, maxSupply: 17000, pricingData: PricingData(price: 350.0, marketCap: 6000)),
-        Coin(name: "Chainlink", id: 10, cmcRank: 10, maxSupply: 1000, pricingData: PricingData(price: 30.0, marketCap: 1500)),
-        Coin(name: "Uniswap", id: 11, cmcRank: 11, maxSupply: 1000, pricingData: PricingData(price: 28.0, marketCap: 1400)),
-        Coin(name: "Solana", id: 12, cmcRank: 12, maxSupply: nil, pricingData: PricingData(price: 140.0, marketCap: 7000)),
-        Coin(name: "Stellar", id: 13, cmcRank: 13, maxSupply: 50000, pricingData: PricingData(price: 0.4, marketCap: 500)),
-        Coin(name: "VeChain", id: 14, cmcRank: 14, maxSupply: 86000, pricingData: PricingData(price: 0.12, marketCap: 100)),
-        Coin(name: "Aave", id: 15, cmcRank: 15, maxSupply: 16000, pricingData: PricingData(price: 400.0, marketCap: 3200)),
-        Coin(name: "Theta", id: 16, cmcRank: 16, maxSupply: 1000, pricingData: PricingData(price: 6.0, marketCap: 600)),
-        Coin(name: "Avalanche", id: 17, cmcRank: 17, maxSupply: 10000, pricingData: PricingData(price: 60.0, marketCap: 2000)),
-        Coin(name: "Cosmos", id: 18, cmcRank: 18, maxSupply: nil, pricingData: PricingData(price: 30.0, marketCap: 900)),
-    ]
+    private let viewModel: MainViewControllerViewModel
     
     // MARK: UI elements
+    
+    private let searchController = UISearchController(searchResultsController: nil)
     
     private let tableView: UITableView = {
         let view = UITableView()
@@ -34,15 +17,41 @@ class MainViewController: UIViewController {
         return view
     }()
     
+    init(viewModel:MainViewControllerViewModel = MainViewControllerViewModel()) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setView()
         setConstraints()
         setupTableView()
-        navigationItem.title = "List of currencies"
+        setupNavigationBar()
+        reloadTableView()
+        setupSearchController()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        // Скрываем клавиатуру, если она открыта
+        searchController.searchBar.resignFirstResponder()
     }
     
     // MARK: Setup UI
+    
+    
+   private func reloadTableView() {
+        self.viewModel.onCoinsUpdated = {[weak self] in
+            DispatchQueue.main.async {
+                self?.tableView.reloadData()
+            }
+        }
+    }
 
    private func setView() {
         view.addSubview(tableView)
@@ -63,20 +72,55 @@ class MainViewController: UIViewController {
     func setupTableView() {
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.register(CoinCell.self, forCellReuseIdentifier: CoinCell.identifier) // регистрация ячейки типа CoinCell, в данном случае .self обозначает не экземпляр класса, а тип данных (то есть класс). В качестве индентификатора используем значение статической переменной identifier, класса CoinCell. Это поможет при необходимости изменив значение статической переменной изменить индентификтор сразу по всему коду.
+        tableView.register(CoinCell.self, forCellReuseIdentifier: CoinCell.identifier)
+    }
+    
+    // MARK: Setup NavigationBar titles
+    
+    func setupNavigationBar() {
+        navigationItem.title = "List of currencies"
+        navigationItem.backBarButtonItem = UIBarButtonItem(title: "Back", style: .done, target: nil, action: nil)
+    }
+    
+    // MARK: Setup SearchController
+    
+    private func setupSearchController() {
+        searchController.searchResultsUpdater = self
+        searchController.obscuresBackgroundDuringPresentation = false
+        searchController.searchBar.placeholder = "Search Cryptos"
+        
+        navigationItem.searchController = searchController
+        definesPresentationContext = false
+        navigationItem.hidesSearchBarWhenScrolling = false
+        self.searchController.delegate = self
+        searchController.searchBar.showsCancelButton = true
+        searchController.searchBar.showsBookmarkButton = true
+        searchController.searchBar.setImage(UIImage(systemName: "questionmark"), for: .bookmark, state: .normal)
+     }
+}
+
+    // MARK: Setup SearchController functions
+
+extension MainViewController: UISearchResultsUpdating {
+    func updateSearchResults(for searchController: UISearchController) {
+        print("DEBUG PRINT:", searchController.searchBar.text)
+        viewModel.updateSearchController(searchBarText:searchController.searchBar.text)
     }
 }
 
 extension MainViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection: Int) -> Int {
-        return coins.count
+        let inSearchMode = viewModel.inSearchMode(searchController)
+        return inSearchMode ? viewModel.filteredCoins.count : viewModel.allCoins.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath:IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: CoinCell.identifier, for: indexPath) as? CoinCell else {return UITableViewCell()}
-        let coin = coins[indexPath.row] // Извлекаем текущий объект массива coins для текущей строки таблицы для того, чтобы потом использовать этот объект для настройки ячейки
-        cell.configureCell(with: coin)
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: CoinCell.identifier, for: indexPath) as? CoinCell else { fatalError("Unable to dequeue CoinCell in HomeController")}
+        let inSearchMode = viewModel.inSearchMode(searchController)
+        let coin = inSearchMode ? viewModel.filteredCoins[indexPath.row] : viewModel.allCoins[indexPath.row]
+        cell.configure(with:coin)
+        cell.updateImage()
         return cell
     }
     
@@ -84,11 +128,12 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource {
         return 64
     }
     
+    // Method to push to CryptoViewController
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let coin = coins[indexPath.row]
-        let viewModel = CryptoViewModel(coin: coin)
+        let inSearchMode = viewModel.inSearchMode(searchController)
+        let coin = inSearchMode ? viewModel.filteredCoins[indexPath.row] : viewModel.allCoins[indexPath.row]
+        let viewModel = CryptoViewControllerViewModel(coin: coin)
         let viewController = CryptoViewController(cryptoViewModel: viewModel)
         navigationController?.pushViewController(viewController, animated: true)
     }
-    
 }

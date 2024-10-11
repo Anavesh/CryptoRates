@@ -1,14 +1,12 @@
-import Foundation
 import UIKit
+import Kingfisher
 
 class CryptoViewController: UIViewController {
     
     // MARK: Variables
-    let cryptoViewModel:CryptoViewModel
-    
+    let cryptoViewModel: CryptoViewControllerViewModel
     
     // MARK: UI elements
-    
     let contentView: UIView = {
         let view = UIView()
         return view
@@ -26,8 +24,8 @@ class CryptoViewController: UIViewController {
         label.textColor = .black
         label.textAlignment = .center
         label.adjustsFontSizeToFitWidth = true
-        label.font = UIFont(name: "Avenir Bold", size: 28)
-        label.adjustsFontSizeToFitWidth = false
+        label.font = UIFont.preferredFont(forTextStyle: .title3)
+        label.adjustsFontForContentSizeCategory = true
         return label
     }()
     
@@ -44,8 +42,30 @@ class CryptoViewController: UIViewController {
         label.textColor = .black
         label.textAlignment = .center
         label.adjustsFontSizeToFitWidth = true
-        label.font = UIFont(name: "Avenir Bold", size: 28)
-        label.adjustsFontSizeToFitWidth = false
+        label.font = UIFont.preferredFont(forTextStyle: .title3)
+        label.adjustsFontForContentSizeCategory = true
+        return label
+    }()
+    
+    let totalSupplyLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Default text"
+        label.textColor = .black
+        label.textAlignment = .center
+        label.adjustsFontSizeToFitWidth = true
+        label.font = UIFont.preferredFont(forTextStyle: .title3)
+        label.adjustsFontForContentSizeCategory = true
+        return label
+    }()
+    
+    let circulatingSupplyLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Default text"
+        label.textColor = .black
+        label.textAlignment = .center
+        label.adjustsFontSizeToFitWidth = true
+        label.font = UIFont.preferredFont(forTextStyle: .title3)
+        label.adjustsFontForContentSizeCategory = true
         return label
     }()
     
@@ -55,8 +75,8 @@ class CryptoViewController: UIViewController {
         label.textColor = .black
         label.textAlignment = .center
         label.adjustsFontSizeToFitWidth = true
-        label.font = UIFont(name: "Avenir Bold", size: 28)
-        label.adjustsFontSizeToFitWidth = false
+        label.font = UIFont.preferredFont(forTextStyle: .title3)
+        label.adjustsFontForContentSizeCategory = true
         return label
     }()
     
@@ -66,77 +86,86 @@ class CryptoViewController: UIViewController {
         label.textColor = .black
         label.textAlignment = .center
         label.adjustsFontSizeToFitWidth = true
-        label.font = UIFont(name: "Avenir Bold", size: 28)
-        label.adjustsFontSizeToFitWidth = false
+        label.font = UIFont.preferredFont(forTextStyle: .title3)
+        label.adjustsFontForContentSizeCategory = true 
         return label
     }()
     
-    private lazy var stackView: UIStackView = { // UIStackView must always be lazy var, cause it cant be guaranteed that all properties inside stackView will be initialized before the stackView
-        let stack = UIStackView(arrangedSubviews: [logoImage, rankLabel, maxSupplyLabel,marketCapLabel,priceLabel])
-        stack.distribution = .fill
+    private lazy var stackView: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [logoImage, rankLabel, maxSupplyLabel,totalSupplyLabel, circulatingSupplyLabel, marketCapLabel, priceLabel])
         stack.axis = .vertical
-        stack.spacing = 8
-        stack.alignment = .fill
+        stack.spacing = 12
+        stack.alignment = .center
         return stack
     }()
     
-    init(cryptoViewModel: CryptoViewModel) { // its custom initialisator, due to the fact that CryptoViewController is a daugther class of UIViewController which is parent class, we must also adress the initialisator of parent class
+    init(cryptoViewModel: CryptoViewControllerViewModel) {
         self.cryptoViewModel = cryptoViewModel
-        super.init(nibName: nil, bundle: nil) // initialisator for UIViewController, due to the fact that we want to write the UIViewController ourself nibname is nil, bundle is nil as well.
+        super.init(nibName: nil, bundle: nil)
     }
+    
     required init(coder: NSCoder) {
         fatalError("init(coder:) was not implemented")
     }
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setView()
         setConstraints()
-        view.backgroundColor = .systemBackground
+        setCoinLogoImage()
+        setNavigationBar()
+        setLabelsText()
+    }
+    
+    func setNavigationBar() {
         navigationItem.title = cryptoViewModel.coin.name
-        navigationController?.navigationBar.topItem?.leftBarButtonItem = UIBarButtonItem(title: "Back", style: .done, target: nil, action: nil)
-        
-        // MARK: Setup of label values from CryptoViewModel
-        
+    }
+    
+    func setLabelsText() {
         rankLabel.text = cryptoViewModel.rank
         maxSupplyLabel.text = cryptoViewModel.maxSupply
         priceLabel.text = cryptoViewModel.price
         marketCapLabel.text = cryptoViewModel.marketCap
+        circulatingSupplyLabel.text = cryptoViewModel.circulatingSupply
+        totalSupplyLabel.text = cryptoViewModel.totalSupply
     }
     
-    // MARK: Setup UI
-    
+    func setCoinLogoImage() {
+        logoImage.kf.setImage(with: cryptoViewModel.coin.logoURL)
+    }
+        
     func setView() {
-        [contentView,scrollView,stackView].forEach {$0.translatesAutoresizingMaskIntoConstraints = false}
+        [contentView, scrollView, stackView].forEach {$0.translatesAutoresizingMaskIntoConstraints = false}
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
         contentView.addSubview(stackView)
+        view.backgroundColor = .systemBackground
     }
     
     func setConstraints() {
-        let height = contentView.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 20)
-        height.priority = UILayoutPriority(1)
-        height.isActive = true
-        
-        NSLayoutConstraint.activate([
-            // Ограничения для scrollView
+        NSLayoutConstraint.activate ([
+            // Constraints for scrollView
             scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
             
-            // Ограничения для contentView внутри scrollView
+            // Constraints for contentView inside scrollView
+            contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
             contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
             contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
             contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
-            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor, multiplier: 1.0), // Делаем contentView такой же ширины, как и scrollView
-            contentView.heightAnchor.constraint(equalTo:scrollView.heightAnchor),
+            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
             
-            // Ограничения для stackView внутри contentView
+            // Constraints for stackView inside contentView
             stackView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            stackView.topAnchor.constraint(equalTo: contentView.topAnchor),
-            stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
-            stackView.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 1.0), // Ограничиваем ширину stackView относительно contentView
+            stackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 20),
+            stackView.bottomAnchor.constraint(lessThanOrEqualTo: contentView.bottomAnchor, constant: -20),
+            stackView.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 0.9),
+            
+            // Constraints for logoImage size
+            logoImage.heightAnchor.constraint(equalTo: stackView.widthAnchor, multiplier: 0.3),
+            logoImage.widthAnchor.constraint(equalTo: stackView.widthAnchor, multiplier: 0.3)
         ])
     }
 }
